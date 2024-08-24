@@ -1,4 +1,5 @@
 {number|string} [dividend=2] The frequency multiple to create equal divisions of (number or a ratio).
-{number} [divisions=12] The number of equally spaced divisions.
-{(number|string)[][]} rows The tunings, each as a quantity of equally spaced divisions from the root or as a ratio, or undefined, meaning there is no key in that position.
+{number} [divisions] The number of equally spaced divisions.
+{(number|string)[][]} rows The tunings for each note, each as the number of equally spaced
+divisions from the root or as a ratio, or undefined, meaning there is no key in that position.
 {number[]} [offsets=[]] The horizontal offsets of each row (as a fractional number of keys).

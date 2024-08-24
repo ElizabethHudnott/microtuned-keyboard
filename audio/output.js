@@ -7,14 +7,23 @@ const audioContext = new AudioContext();
 const destinations = [audioContext.destination];
 const playing = [];
 
-window.noteOn = function (noteNumber, tuningValue, velocity) {
+function nextQuantum() {
+	return audioContext.currentTime + 255 / audioContext.sampleRate;
+}
+
+function noteOn(noteNumber, tuningValue, velocity) {
 	audioContext.resume();
 	const frequency = 440 * tuningValue;
-	const note = new generator(noteNumber, audioContext, frequency, velocity);
+	const note = new generator(noteNumber, audioContext, frequency, velocity, nextQuantum());
 	note.connect(destinations);
 	playing[noteNumber] = note;
 }
 
-window.noteOff = function (noteNumber) {
-	playing[noteNumber].noteOff();
+function noteOff(noteNumber) {
+	playing[noteNumber].noteOff(nextQuantum());
+}
+
+export {
+	noteOn,
+	noteOff,
 }

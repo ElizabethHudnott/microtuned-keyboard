@@ -1,3 +1,4 @@
+import {noteOn, noteOff} from './audio/output.js';
 const tunings = ['53edo'];
 
 let tuning;
@@ -13,12 +14,27 @@ function pointerUp(event) {
 	noteOff(keyNumber);
 }
 
+function pointerLeave(event) {
+	if (event.buttons > 0) {
+		const keyNumber = parseInt(event.currentTarget.dataset.keyNumber);
+		noteOff(keyNumber);
+	}
+}
+
+function pointerEnter(event) {
+	if (event.buttons > 0) {
+		const keyNumber = parseInt(event.currentTarget.dataset.keyNumber);
+		const tuningValue = tuning[keyNumber];
+		noteOn(keyNumber, tuningValue, 127);
+	}
+}
+
 async function loadTuning(name) {
 	const url = 'tunings/' + name + '.json';
 	const response = await fetch(url);
 	const data = await response.json();
 	const dividend = data.dividend || 2;
-	const divisions = data.divisions || 12;
+	const divisions = data.divisions;
 	const rows = data.rows;
 	const numRows = rows.length;
 	const offsets = Array.isArray(data.offsets) ? data.offsets : [];
@@ -43,6 +59,8 @@ async function loadTuning(name) {
 			button.dataset.keyNumber = buttonNum;
 			button.addEventListener('pointerdown', pointerDown);
 			button.addEventListener('pointerup', pointerUp);
+			button.addEventListener('pointerleave', pointerLeave);
+			button.addEventListener('pointerenter', pointerEnter);
 			let ratio = dividend ** (noteTuning / divisions);
 			tuning[buttonNum] = ratio;
 			button.innerHTML = noteTuning;

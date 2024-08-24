@@ -8,9 +8,9 @@ export default class AbstractNote {
 		}
 	}
 
-	noteCut() {
+	stop(stopTime) {
 		for (let source of this.sources) {
-			source.stop()
+			source.stop(stopTime);
 		}
 	}
 
