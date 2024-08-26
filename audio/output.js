@@ -1,9 +1,10 @@
 import OrganNote from './organ.js';
+const audioContext = new AudioContext();
+OrganNote.initialize(audioContext);
 const generators = new Map();
 generators.set('Organ', OrganNote);
 let generator = OrganNote;
 
-const audioContext = new AudioContext();
 const destinations = [audioContext.destination];
 const playing = [];
 
@@ -14,7 +15,7 @@ function nextQuantum() {
 function noteOn(noteNumber, tuningValue, velocity) {
 	audioContext.resume();
 	const frequency = 440 * tuningValue;
-	const note = new generator(noteNumber, audioContext, frequency, velocity, nextQuantum());
+	const note = new generator(noteNumber, audioContext, 0.5 * frequency, velocity, nextQuantum());
 	note.connect(destinations);
 	playing[noteNumber] = note;
 }
