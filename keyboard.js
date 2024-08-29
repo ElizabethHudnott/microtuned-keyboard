@@ -1,7 +1,34 @@
-import {noteOn, noteOff} from './audio/output.js';
+import {initializeSynths, noteOn, noteOff} from './audio/output.js';
 const tunings = ['53edo'];
 
 let tuning;
+
+function binarySearch(array, searchValue) {
+	let lowerIndex = 0;
+	let upperIndex = array.length - 1;
+	let midIndex = Math.trunc(0.5 * upperIndex);
+	let midValue = array[midIndex];
+	while (lowerIndex < upperIndex && midValue !== searchValue) {
+		if (midValue > searchValue) {
+			upperIndex = midIndex - 1;
+		} else {
+			lowerIndex = midIndex + 1;
+		}
+		midIndex = Math.trunc(0.5 * (lowerIndex + upperIndex));
+		midValue = array[midIndex];
+	}
+	if (midValue === searchValue) {
+		return [searchValue, searchValue];
+	}
+	return [array[upperIndex], array[lowerIndex]];
+}
+
+window.musicKeyboard = {
+	nearestNote(ratio) {
+		const [lower, upper] = binarySearch(tuning, ratio);
+		return ratio - lower <= upper - ratio ? lower : upper;
+	}
+}
 
 function pointerDown(event) {
 	const keyNumber = parseInt(event.currentTarget.dataset.keyNumber);
@@ -71,4 +98,5 @@ async function loadTuning(name) {
 	}
 }
 
-loadTuning(tunings[0]);
+await loadTuning(tunings[0]);
+initializeSynths();
