@@ -1,18 +1,21 @@
-import {initializeSynths, noteOn, noteOff} from './audio/output.js';
+import {noteOn, noteOff} from './audio/output.js';
+const VELOCITY_DEFAULT = 127;
 const tunings = ['53edo'];
 
+// Maps button numbers to ratios.
 let tuning;
+let sortedTuning;
 
 function binarySearch(array, searchValue) {
 	let lowerIndex = 0;
 	let upperIndex = array.length - 1;
 	let midIndex = Math.trunc(0.5 * upperIndex);
 	let midValue = array[midIndex];
-	while (lowerIndex < upperIndex && midValue !== searchValue) {
+	while (lowerIndex < upperIndex - 1 && midValue !== searchValue) {
 		if (midValue > searchValue) {
-			upperIndex = midIndex - 1;
+			upperIndex = midIndex;
 		} else {
-			lowerIndex = midIndex + 1;
+			lowerIndex = midIndex;
 		}
 		midIndex = Math.trunc(0.5 * (lowerIndex + upperIndex));
 		midValue = array[midIndex];
@@ -20,20 +23,37 @@ function binarySearch(array, searchValue) {
 	if (midValue === searchValue) {
 		return [searchValue, searchValue];
 	}
-	return [array[upperIndex], array[lowerIndex]];
+	return [array[lowerIndex], array[upperIndex]];
 }
 
 window.musicKeyboard = {
-	nearestNote(ratio) {
-		const [lower, upper] = binarySearch(tuning, ratio);
-		return ratio - lower <= upper - ratio ? lower : upper;
-	}
+	nearestRatio: function (ratio, fromNote = 0) {
+		const numNotes = tuning.length;
+		const dividend = sortedTuning[numNotes];
+
+		let equivalenceIntervals = Math.floor(fromNote / numNotes);
+		fromNote -= numNotes * equivalenceIntervals;
+		ratio *= dividend ** equivalenceIntervals * tuning[fromNote];
+
+		equivalenceIntervals = 0;
+		while (ratio < 1) {
+			ratio *= dividend;
+			equivalenceIntervals--;
+		}
+		while (ratio > dividend) {
+			ratio /= dividend;
+			equivalenceIntervals++;
+		}
+		const [lower, upper] = binarySearch(sortedTuning, ratio);
+		return (dividend ** equivalenceIntervals) * (ratio - lower < upper - ratio ? lower : upper);
+	},
+
 }
 
 function pointerDown(event) {
 	const keyNumber = parseInt(event.currentTarget.dataset.keyNumber);
 	const tuningValue = tuning[keyNumber];
-	noteOn(keyNumber, tuningValue, 127);
+	noteOn(keyNumber, tuningValue, VELOCITY_DEFAULT);
 }
 
 function pointerUp(event) {
@@ -52,7 +72,7 @@ function pointerEnter(event) {
 	if (event.buttons > 0) {
 		const keyNumber = parseInt(event.currentTarget.dataset.keyNumber);
 		const tuningValue = tuning[keyNumber];
-		noteOn(keyNumber, tuningValue, 127);
+		noteOn(keyNumber, tuningValue, VELOCITY_DEFAULT);
 	}
 }
 
@@ -96,7 +116,9 @@ async function loadTuning(name) {
 		}
 		keyboard.appendChild(rowContainer);
 	}
+	sortedTuning = tuning.slice();
+	sortedTuning.push(dividend);
+	sortedTuning.sort((a, b) => a - b);
 }
 
 await loadTuning(tunings[0]);
-initializeSynths();

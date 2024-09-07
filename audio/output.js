@@ -14,7 +14,7 @@ function nextQuantum() {
 function noteOn(noteNumber, tuningValue, velocity) {
 	audioContext.resume();
 	const frequency = 440 * tuningValue;
-	const note = new generator(noteNumber, frequency, velocity, nextQuantum());
+	const note = generator.factory(noteNumber, frequency, velocity, nextQuantum());
 	note.connect(destinations);
 	playing[noteNumber] = note;
 }
@@ -23,14 +23,7 @@ function noteOff(noteNumber) {
 	playing[noteNumber].noteOff(nextQuantum());
 }
 
-function initializeSynths() {
-	for (let generator of generators.values()) {
-		generator.init();
-	}
-}
-
 export {
-	initializeSynths,
 	noteOn,
 	noteOff,
 }
