@@ -6,9 +6,25 @@ export default class OrganNote extends AbstractNote {
 	static maxRelease = 0.05;
 	static #drawbarPositions = [8, 4, 3, 2, 1, 0, 1];
 	static #drawbarTotal = 7;
-	static #drawbarRatios = [0.5, 1, 1.5, 2, 3, 4, 5, 6, 8];
+	static #drawbarRatios;
 	static #notes = new Map();
 	static #oscillators = new Map();
+
+	static {
+		const fifth = 2 ** (7 / 12);
+		const third = 2 ** (4 / 12);
+		OrganNote.#drawbarRatios = [
+			0.5,			// 1/2
+			1,				// 2/2
+			fifth,		// 3/2
+			2,				// 4/2
+			2 * fifth,	// 6/2
+			4,				// 8/2
+			4 * third,	// 10/2
+			4 * fifth,	// 12/2
+			8,				// 16/2
+		];
+	}
 
 	static factory(noteNumber, frequency, velocity, time) {
 		let note = OrganNote.#notes.get(noteNumber);
