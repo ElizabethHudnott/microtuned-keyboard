@@ -5,7 +5,7 @@ export default class OrganNote extends AbstractNote {
 	static maxAttack = 0.03;
 	static maxRelease = 0.05;
 	static #drawbarPositions = [8, 4, 3, 2, 1, 0, 1];
-	static #drawbarTotal = 7;
+	static #drawbarMax = 7;
 	static #drawbarRatios;
 	static #notes = new Map();
 	static #oscillators = new Map();
@@ -59,22 +59,35 @@ export default class OrganNote extends AbstractNote {
 	noteOn(time, velocity) {
 		const numDrawbars = OrganNote.#drawbarPositions.length;
 		const attack = OrganNote.maxAttack * (128 - velocity) / 127;
+		let lastOn = 0;
 		for (let i = 0; i < numDrawbars; i++) {
-			const connectTime = time + Math.random() * attack;
-			const level = OrganNote.#drawbarPositions[i] / (8 * OrganNote.#drawbarTotal);
-			const gain = this.outputs[i].gain;
+			const latestOn = i / (numDrawbars - 1) * attack;
+			const delay = Math.random() * (latestOn - lastOn);
+			const connectTime = time + lastOn + delay;
+			const drawbarNumber = numDrawbars - i - 1;
+			const level = OrganNote.#drawbarPositions[drawbarNumber] / (8 * OrganNote.#drawbarMax);
+			const gain = this.outputs[drawbarNumber].gain;
 			gain.cancelScheduledValues(connectTime);
 			gain.setValueAtTime(level, connectTime);
+			lastOn += delay;
 		}
 	}
 
 	noteOff(time, velocity = 127) {
+		for (let output of this.outputs) {
+			output.gain.cancelScheduledValues(time);
+		}
+		const numDrawbars = OrganNote.#drawbarPositions.length;
 		const release = OrganNote.maxRelease * (128 - velocity) / 127;
-		for (let drawbarAmp of this.outputs) {
-			const disconnectTime = time + Math.random() * release;
-			const gain = drawbarAmp.gain;
-			gain.cancelScheduledValues(disconnectTime);
+		let lastOff = 0;
+		for (let i = 0; i < numDrawbars; i++) {
+			const latestOff = i / (numDrawbars - 1) * release;
+			const delay = Math.random() * (latestOff - lastOff);
+			const disconnectTime = time + lastOff + delay;
+			const drawbarNumber = numDrawbars - i - 1;
+			const gain = this.outputs[drawbarNumber].gain;
 			gain.setValueAtTime(0, disconnectTime);
+			lastOff += delay;
 		}
 	}
 

@@ -1,5 +1,5 @@
 import {noteOn, noteOff} from './audio/output.js';
-const VELOCITY_DEFAULT = 127;
+const VELOCITY_DEFAULT = 64;
 const tunings = ['53edo'];
 
 // Maps button numbers to ratios.
