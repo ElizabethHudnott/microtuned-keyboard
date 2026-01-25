@@ -1,18 +1,23 @@
 import OrganNote from './organ.js';
-window.audioContext = new AudioContext();
 const generators = new Map();
 generators.set('Organ', OrganNote);
-
 let generator = OrganNote;
-const destinations = [audioContext.destination];
 const playing = [];
 
+const context = new AudioContext();
+
 function nextQuantum() {
-	return audioContext.currentTime + 255 / audioContext.sampleRate;
+	return context.currentTime + 255 / context.sampleRate;
 }
 
+let lfoFrequency = 5;
+let vibratoEnabled = false;
+const lfo = new OscillatorNode(context, {frequency: 0});
+lfo.start();
+const destinations = [context.destination];
+
 function noteOn(noteNumber, tuningValue, velocity) {
-	audioContext.resume();
+	context.resume();
 	const frequency = 440 * tuningValue;
 	const note = generator.factory(noteNumber, frequency, velocity, nextQuantum());
 	note.connect(destinations);
@@ -22,6 +27,30 @@ function noteOn(noteNumber, tuningValue, velocity) {
 function noteOff(noteNumber) {
 	playing[noteNumber].noteOff(nextQuantum());
 }
+
+function enableVibrato(enabled, time) {
+	if (enabled) {
+		lfo.frequency.setValueAtTime(lfoFrequency, time);
+	} else {
+		lfo.frequency.setValueAtTime(0, time);
+	}
+	vibratoEnabled = enabled;
+}
+
+function setLFOFrequency(frequency, time) {
+	if (vibratoEnabled) {
+		lfo.frequency.setValueAtTime(frequency, time);
+	}
+	lfoFrequency = frequency;
+}
+
+window.audioOut = {
+	context: context,
+	enableVibrato: enableVibrato,
+	setLFOFrequency: setLFOFrequency,
+}
+
+generator.activate(nextQuantum());
 
 export {
 	noteOn,

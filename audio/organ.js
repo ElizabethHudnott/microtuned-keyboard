@@ -4,8 +4,8 @@ export default class OrganNote extends AbstractNote {
 
 	static maxAttack = 0.03;
 	static maxRelease = 0.05;
-	static #drawbarPositions = [8, 4, 3, 2, 1, 0, 1];
-	static #drawbarMax = 7;
+	static #drawbarPositions;
+	static #drawbarTotal;
 	static #drawbarRatios;
 	static #notes = new Map();
 	static #oscillators = new Map();
@@ -24,6 +24,20 @@ export default class OrganNote extends AbstractNote {
 			4 * fifth,	// 12/2
 			8,				// 16/2
 		];
+		OrganNote.setDrawbars([8, 8, 6, 0, 5, 0, 3, 2, 0]);
+	}
+
+	static activate(time) {
+		audioOut.setLFOFrequency(412 / 60, time);
+	}
+
+	static setDrawbars(levels) {
+		OrganNote.#drawbarPositions = levels;
+		let total = 0;
+		for (let level of levels) {
+			total += level;
+		}
+		OrganNote.#drawbarTotal = total;
 	}
 
 	static factory(noteNumber, frequency, velocity, time) {
@@ -38,16 +52,17 @@ export default class OrganNote extends AbstractNote {
 
 	constructor(noteNumber, time) {
 		super();
+		const context = audioOut.context;
 		const drawbarAmps = [];
 		for (let drawbarRatio of OrganNote.#drawbarRatios) {
 			const ratio = musicKeyboard.nearestRatio(drawbarRatio, noteNumber);
 			let oscillator = OrganNote.#oscillators.get(ratio);
 			if (oscillator === undefined) {
-				oscillator = new OscillatorNode(audioContext, {frequency: 220 * ratio});
+				oscillator = new OscillatorNode(context, {frequency: 440 * 2 ** (-9/12) * ratio});
 				OrganNote.#oscillators.set(ratio, oscillator);
 				oscillator.start(time);
 			}
-			const drawbarAmp = new GainNode(audioContext, {gain: 0});
+			const drawbarAmp = new GainNode(context, {gain: 0});
 			oscillator.connect(drawbarAmp);
 			drawbarAmps.push(drawbarAmp);
 		}
@@ -65,7 +80,7 @@ export default class OrganNote extends AbstractNote {
 			const delay = Math.random() * (latestOn - lastOn);
 			const connectTime = time + lastOn + delay;
 			const drawbarNumber = numDrawbars - i - 1;
-			const level = OrganNote.#drawbarPositions[drawbarNumber] / (8 * OrganNote.#drawbarMax);
+			const level = OrganNote.#drawbarPositions[drawbarNumber] / OrganNote.#drawbarTotal;
 			const gain = this.outputs[drawbarNumber].gain;
 			gain.cancelScheduledValues(connectTime);
 			gain.setValueAtTime(level, connectTime);
